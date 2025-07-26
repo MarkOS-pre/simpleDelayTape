@@ -41,6 +41,13 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
     wowSlider.setRange(0.0f, 10.0f, 0.0f);
     wowSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
     addAndMakeVisible(wowSlider);
+
+    wowSpeed.setSliderStyle(juce::Slider::Rotary);
+    wowSpeed.setRange(0.1f, 4.0f, 0.0f);
+    wowSpeed.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    addAndMakeVisible(wowSpeed);
+
+    
     
     divisionBoxI.addItem("1/4", 1);
     divisionBoxI.addItem("1/4.", 2);
@@ -70,6 +77,7 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
     feedbackKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "feedback", feedbackSlider);
     dryWetKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "dryWet", dryWetSlider);
     wowKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "wow", wowSlider);
+    speedKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "wowSpeed", wowSpeed);
     syncAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.tree, "syncOn", syncButton);
     divisionAttachmentI = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -95,6 +103,7 @@ void SimpleDelayTapeAudioProcessorEditor::paint (juce::Graphics& g)
     g.drawText("Feedback", 2 * (getWidth() / 4) + 10, 5, (getWidth() / 4) - 10, 100, juce::Justification::centred, true);
     g.drawText("DryWet", 3 * (getWidth() / 4) + 10, 5, (getWidth() / 4) - 10, 100, juce::Justification::centred, true);
     g.drawText("Wow", 10, 160, (getWidth() / 4) - 10, 100, juce::Justification::centred, true);
+    g.drawText("WowSpeed", 10 + (getWidth() / 4), 160, (getWidth() / 4) - 10, 100, juce::Justification::centred, true);
 }
 
 void SimpleDelayTapeAudioProcessorEditor::resized()
@@ -110,4 +119,5 @@ void SimpleDelayTapeAudioProcessorEditor::resized()
     syncButton.setBounds(2*(getWidth() / 4) + 10, 110, (getWidth() / 4) - 10, 100);
     pingPongButton.setBounds(3 * (getWidth() / 4) + 10, 110, (getWidth() / 4) - 10, 100);
     wowSlider.setBounds(10, 150, (getWidth() / 4), 100);
+    wowSpeed.setBounds(10 + (getWidth() / 4), 150, (getWidth() / 4), 100);
 }

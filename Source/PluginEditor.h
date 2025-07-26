@@ -35,6 +35,7 @@ private:
     juce::Slider feedbackSlider;
     juce::Slider dryWetSlider;
     juce::Slider wowSlider;
+    juce::Slider wowSpeed;
 
     juce::ToggleButton syncButton{ "Sync to BPM" }, pingPongButton{ "Ping Pong" };
     juce::ComboBox divisionBoxI;
@@ -45,6 +46,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> feedbackKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> wowKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> speedKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> syncAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> pingPongAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> divisionAttachmentI;

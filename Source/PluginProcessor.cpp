@@ -31,6 +31,8 @@
 #define DIVISION_NAME_D "DivisionD"
 #define WOW_ID "wow"
 #define WOW_NAME "Wow"
+#define WOW_SPEED_ID "wowSpeed"
+#define WOW_SPEED_NAME "WowSpeed"
 
 //==============================================================================
 SimpleDelayTapeAudioProcessor::SimpleDelayTapeAudioProcessor()
@@ -48,6 +50,7 @@ SimpleDelayTapeAudioProcessor::SimpleDelayTapeAudioProcessor()
                                  std::make_unique<juce::AudioParameterFloat>(LEVEL_ID, LEVEL_NAME, 0.0f, 1.0f, 0.8f),
                                  std::make_unique<juce::AudioParameterFloat>(DRYWET_ID, DRYWET_NAME, 0.0f, 1.0f, 0.5f),
                                 std::make_unique<juce::AudioParameterFloat>(WOW_ID, WOW_NAME, 0.0f, 10.0f, 0.0f),
+                                std::make_unique<juce::AudioParameterFloat>(WOW_SPEED_ID, WOW_SPEED_NAME, 0.1f, 4.0f, 1.5f),
                                 std::make_unique<juce::AudioParameterBool>(SYNC_ID, SYNC_NAME, false),
                                 std::make_unique<juce::AudioParameterBool>(PING_PONG_ID, PING_PONG_NAME, false),
                                 std::make_unique<juce::AudioParameterChoice>(DIVISION_ID_I, DIVISION_NAME_I,
@@ -131,7 +134,7 @@ void SimpleDelayTapeAudioProcessor::prepareToPlay(double sampleRate, int samples
     localSampleRate = sampleRate;
 
     const int maxDelayTimeMs = 2000; // 2 segundos
-    const int maxDelaySamples = (int)(maxDelayTimeMs * localSampleRate / 1000.0);
+     maxDelaySamples = (int)(maxDelayTimeMs * localSampleRate / 1000.0);
 
 
     for (int i = 0; i < 2; ++i)
@@ -245,10 +248,11 @@ void SimpleDelayTapeAudioProcessor::processPingPongDelay(juce::AudioBuffer<float
 
         float delaySamples = smoothedDelayTimePingPong.getNextValue() * getSampleRate() / 1000.0f;
 
-        float delaySamplesWow = applyWowFlutter(delaySamples, localSampleRate);
+        float delaySamplesWow1 = applyWowFlutter(delaySamples, localSampleRate, 0);
+        float delaySamplesWow2 = applyWowFlutter(delaySamples, localSampleRate, 1);
 
-        float delayedL = lowPassFilters[0].processSample(delayLines[0].popSample(0, delaySamplesWow));
-        float delayedR = lowPassFilters[1].processSample(delayLines[1].popSample(0, delaySamplesWow));
+        float delayedL = lowPassFilters[0].processSample(delayLines[0].popSample(0, delaySamplesWow1));
+        float delayedR = lowPassFilters[1].processSample(delayLines[1].popSample(0, delaySamplesWow2));
 
        // float feedbackL = inL + delayedR * feedback;
        // float feedbackR = inR + delayedL * feedback;
@@ -299,7 +303,9 @@ void SimpleDelayTapeAudioProcessor::processStereoDelay(juce::AudioBuffer<float>&
             float delaySamples = delayMs * getSampleRate() / 1000.0f;
 
             //Modulamos delaySamples
-            float modulatedDelaysamples = applyWowFlutter(delaySamples, getSampleRate());
+            float modulatedDelaysamples = applyWowFlutter(delaySamples, getSampleRate(), channel);
+            modulatedDelaysamples = juce::jlimit(1.0f, maxDelaySamples - 1.0f, modulatedDelaysamples);
+
             // Extraer muestra del delay interpolado
             float delayed = delayLines[channel].popSample(0, modulatedDelaysamples);
 
@@ -319,28 +325,39 @@ void SimpleDelayTapeAudioProcessor::processStereoDelay(juce::AudioBuffer<float>&
 
     dryWetMixer.mixWetSamples(buffer);
 }
-float SimpleDelayTapeAudioProcessor::applyWowFlutter(float baseDealySamples, double sampleRate)
+float SimpleDelayTapeAudioProcessor::applyWowFlutter(float baseDealySamples, double sampleRate, int channel)
 {
     constexpr float twoPi = juce::MathConstants<float>::twoPi;
-    wowDepth = *tree.getRawParameterValue(WOW_ID);
-
+    float wowDepthMs = *tree.getRawParameterValue(WOW_ID);
+    wowRate = *tree.getRawParameterValue(WOW_SPEED_ID);
+    smoothWowDepth.setTargetValue(wowDepthMs);
+     wowDepth = (smoothWowDepth.getNextValue() * sampleRate) / 1000.0f;
+     float wowMod;
     //En muestras
 
     float wowStep = twoPi * wowRate / (float)sampleRate;
-    float flutterStep = twoPi * flutterRate / (float)sampleRate;
+    
 
     //LFOs
-
-    float wowMod = std::sin(wowPhase) * wowDepth;
-    float flutterMod = std::sin(flutterPhase) * flutterDepth;
+    if (channel == 0) 
+    {
+         wowMod = std::sin(wowPhase1) * wowDepth;
+        wowPhase1 += wowStep;
+    }
+    else {
+         wowMod = std::sin(wowPhase2) * wowDepth;
+        wowPhase2 += wowStep;
+    }
+    
 
     //Avance de fase
 
-    wowPhase += wowStep;
-    flutterPhase += flutterStep;
+    
+    
 
     //Limitar
-    if (wowPhase > twoPi)  wowPhase -= twoPi;
+    if (wowPhase1 > twoPi)  wowPhase1 -= twoPi;
+    if (wowPhase2 > twoPi)  wowPhase2 -= twoPi;
     if (flutterPhase > twoPi) flutterPhase -= twoPi;
 
     return baseDealySamples + wowMod;

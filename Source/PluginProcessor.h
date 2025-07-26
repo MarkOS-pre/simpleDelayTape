@@ -57,7 +57,7 @@ public:
     void processPingPongDelay(juce::AudioBuffer<float>& buffer, const float delayTimeMs);
     void checkMono(juce::AudioBuffer<float>& buffer);
     void processStereoDelay(juce::AudioBuffer<float>& buffer, int numSamples, int numChannels, float delayTimeMsI, float delayTimeMsD);
-    float applyWowFlutter(float baseDealySamples, double sampleRate);
+    float applyWowFlutter(float baseDealySamples, double sampleRate, int channel);
 
     juce::AudioProcessorValueTreeState tree;
 private:
@@ -70,13 +70,15 @@ private:
     int divisionIndexI;
     int divisionIndexD;
     bool pingPongMode;
+    int maxDelaySamples;
 
     // Wow/Flutter
-    float wowPhase{ 0.0f };
+    float wowPhase1 = 0.0f ;
+    float wowPhase2 = 0.0f;
     float flutterPhase = 0.0f;
 
     // Parámetros configurables
-    float wowRate{ 1.0f };   // Hz
+    float wowRate{ 1.5f };   // Hz
     float wowDepth{ 0.0f };   // Muestras
 
     float flutterRate = 6.0f;  // Hz
@@ -89,7 +91,7 @@ private:
 
     juce::dsp::DryWetMixer<float> dryWetMixer;
     juce::SmoothedValue<float> smoothedMix;
-    juce::SmoothedValue<float> smoothedDelayTimeL, smoothedDelayTimeR, smoothedDelayTimePingPong;
+    juce::SmoothedValue<float> smoothedDelayTimeL, smoothedDelayTimeR, smoothedDelayTimePingPong, smoothWowDepth;
     juce::AudioPlayHead::PositionInfo info;
     juce::dsp::IIR::Filter<float> lowPassFilters[2];
 
