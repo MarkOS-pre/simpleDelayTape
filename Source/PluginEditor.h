@@ -37,9 +37,21 @@ private:
     juce::Slider wowSlider;
     juce::Slider wowSpeed;
 
+    juce::Label* delayILabel;
+    juce::Label* delayDLabel;
+    juce::Label* feedbackLabel;
+    juce::Label* dryWetLabel;
+    juce::Label* wowDepthLabel;
+    juce::Label* wowSpeedLabel;
+
+
     juce::ToggleButton syncButton{ "Sync to BPM" }, pingPongButton{ "Ping Pong" };
     juce::ComboBox divisionBoxI;
     juce::ComboBox divisionBoxD;
+
+    juce::Rectangle<int> delayRectangle;
+    juce::Rectangle<int> wowRectangle;
+    juce::Rectangle<int> outputRectangle;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> timeknobI;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> timeknobD;

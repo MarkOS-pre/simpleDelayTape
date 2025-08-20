@@ -367,9 +367,6 @@ void SimpleDelayTapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     auto numSamples = buffer.getNumSamples();
     auto numChannels = buffer.getNumChannels();
     
-
-    
-    
     feedback = *tree.getRawParameterValue(FEEDBACK_ID);
     syncEnabled = *tree.getRawParameterValue(SYNC_ID);
     divisionIndexI = *tree.getRawParameterValue(DIVISION_ID_I);
