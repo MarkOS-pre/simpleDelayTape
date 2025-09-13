@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "TapeHysteresis.h"
 
 //==============================================================================
 /**
@@ -59,6 +60,18 @@ public:
     void processStereoDelay(juce::AudioBuffer<float>& buffer, int numSamples, int numChannels, float delayTimeMsI, float delayTimeMsD);
     float applyWowFlutter(float baseDealySamples, double sampleRate, int channel);
 
+    //============================================
+
+    void fillDelayBuffer(int channel, const int bufferLength, const int delayBufferLength, const float* bufferData);
+    void getFromDelayBuffer(juce::AudioBuffer<float>& buffer, int channel, const int bufferLength, const int delayBufferLength, int delaySamples, const float* bufferData, const float* delayBufferData);
+    void feedbackDelay(int channel, const int bufferLength, const int delayBufferLength, const float* wetBuffer);
+    float cubicLagrange(const float* buffer, int bufferLength, float readPos);
+    void preAmp(juce::AudioBuffer<float>& buffer);
+    float cassetteSat(float x);
+    void saturation(juce::AudioBuffer<float>& buffer);
+    float udoDistortion(float input);
+    void updateParameters();
+
     juce::AudioProcessorValueTreeState tree;
 private:
     float localSampleRate{ 44100 };
@@ -71,6 +84,11 @@ private:
     int divisionIndexD;
     bool pingPongMode;
     int maxDelaySamples;
+    float wear;
+    float memory;
+    float preampGainDb;
+    
+    TapeHysteresis tapeSat[2];
 
     // Wow/Flutter
     float wowPhase1 = 0.0f ;
@@ -78,6 +96,7 @@ private:
     float flutterPhase = 0.0f;
 
     // Parámetros configurables
+    float wowDepthMs;
     float wowRate{ 1.5f };   // Hz
     float wowDepth{ 0.0f };   // Muestras
 
@@ -87,13 +106,33 @@ private:
     //juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLineI;
     //juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLineD;
 
+    juce::AudioBuffer<float> delayBuffer[2];
+    int writePosition[2] { 0 };
+
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLines[2];
 
     juce::dsp::DryWetMixer<float> dryWetMixer;
     juce::SmoothedValue<float> smoothedMix;
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedPreamp, smoothedFeedback, smoothedWear;
     juce::SmoothedValue<float> smoothedDelayTimeL, smoothedDelayTimeR, smoothedDelayTimePingPong, smoothWowDepth;
     juce::AudioPlayHead::PositionInfo info;
     juce::dsp::IIR::Filter<float> lowPassFilters[2];
+    float currentDelaySamples[2] = { 0.0f, 0.0f };    //para el cambio estilo tape del delaysamples
+    
+
+    //SATURATION
+   
+    juce::dsp::Gain<float> pregain;
+
+    const float highPassCutoff = 70.0f;
+    juce::dsp::IIR::Filter<float> highPassFilter;
+    juce::dsp::IIR::Filter<float> lowPassFilter;
+   
+    juce::dsp::FIR::Coefficients<float> Coefficients;
+
+    juce::dsp::ProcessorDuplicator<juce::dsp::FIR::Filter<float>, juce::dsp::FIR::Coefficients<float>> antiAliasingFilter;
+    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filterProcessor;
+
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayTapeAudioProcessor)

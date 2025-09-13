@@ -15,7 +15,16 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(800, 200);
+    setSize(1200, 200);
+
+    preAmpLabel = new juce::Label("", "Pre Amp");
+    preAmpSlider.setSliderStyle(juce::Slider::Rotary);
+    preAmpSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    preAmpSlider.setRange(-30.0f, 3.0f, -3.0f);
+    preAmpLabel->setJustificationType(juce::Justification::centred);
+    preAmpLabel->attachToComponent(&preAmpSlider, false);
+
+    addAndMakeVisible(preAmpSlider);
 
     delayILabel = new juce::Label("", "DelayI ms");
     delaySliderI.setSliderStyle(juce::Slider::Rotary);
@@ -43,6 +52,22 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
     feedbackLabel->attachToComponent(&feedbackSlider, false);
     addAndMakeVisible(feedbackSlider);
 
+    tapeWearLabel = new juce::Label("", "TapeWear");
+    tapeWearSlider.setSliderStyle(juce::Slider::Rotary);
+    tapeWearSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    tapeWearSlider.setRange(0.5f, 5.0f, 0.5f);
+    tapeWearLabel->setJustificationType(juce::Justification::centred);
+    tapeWearLabel->attachToComponent(&tapeWearSlider, false);
+    addAndMakeVisible(tapeWearSlider);
+
+    tapeMemoryLabel = new juce::Label("", "Memory");
+    tapeMemorySlider.setSliderStyle(juce::Slider::Rotary);
+    tapeMemorySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    tapeMemorySlider.setRange(0.0f, 0.95f, 0.1f);
+    tapeMemoryLabel->setJustificationType(juce::Justification::centred);
+    tapeMemoryLabel->attachToComponent(&tapeMemorySlider, false);
+    addAndMakeVisible(tapeMemorySlider);
+
     dryWetLabel = new juce::Label("", "Dry/Wet");
     dryWetSlider.setSliderStyle(juce::Slider::Rotary);
     dryWetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
@@ -67,6 +92,23 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
     wowSpeedLabel->attachToComponent(&wowSpeed, false);
     addAndMakeVisible(wowSpeed);
 
+    /*
+    preGainLabel = new juce::Label("", "Gain");
+    preGainSlider.setSliderStyle(juce::Slider::Rotary);
+    preGainSlider.setRange(1.0f, 50.0f, 1.0f);
+    preGainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    preGainLabel->setJustificationType(juce::Justification::centred);
+    preGainLabel->attachToComponent(&preGainSlider, false);
+    addAndMakeVisible(preGainSlider);
+
+    filerSaturLabel = new juce::Label("", "Filter");
+    filterSaturSlider.setSliderStyle(juce::Slider::Rotary);
+    filterSaturSlider.setRange(1500.0f, 10000.0f, 1500.0f);
+    filterSaturSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    filerSaturLabel->setJustificationType(juce::Justification::centred);
+    filerSaturLabel->attachToComponent(&filterSaturSlider, false);
+    addAndMakeVisible(filterSaturSlider);
+    */
     
     
     divisionBoxI.addItem("1/4", 1);
@@ -92,12 +134,17 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
     addAndMakeVisible(pingPongButton);
     
 
+    preAmpKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "preAmp", preAmpSlider);
     timeknobI = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "timeI", delaySliderI);
     timeknobD = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "timeD", delaySliderD);
     feedbackKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "feedback", feedbackSlider);
+    tapeWearKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "tapeWear", tapeWearSlider);
+    tapeWearKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "tapeMemory", tapeMemorySlider);
     dryWetKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "dryWet", dryWetSlider);
     wowKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "wow", wowSlider);
     speedKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "wowSpeed", wowSpeed);
+    preGainKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "preGain", preGainSlider);
+    filterSaturKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "filterSatur", filterSaturSlider);
     syncAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.tree, "syncOn", syncButton);
     divisionAttachmentI = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
@@ -119,11 +166,19 @@ void SimpleDelayTapeAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
     g.setColour(juce::Colours::white);
 
+    g.drawRoundedRectangle(preAmpRectangle.toFloat(), 8.0f, 2.0f);
+    g.drawFittedText("PreAmp", preAmpRectangle.reduced(4), juce::Justification::topLeft, 1);
+
     g.drawRoundedRectangle(delayRectangle.toFloat(), 8.0f, 2.0f);
     g.drawFittedText("Delay", delayRectangle.reduced(4), juce::Justification::topLeft, 1);
 
     g.drawRoundedRectangle(wowRectangle.toFloat(), 8.0f, 2.0f);
     g.drawFittedText("Wow", wowRectangle.reduced(4), juce::Justification::topLeft, 1);
+
+    /*
+    g.drawRoundedRectangle(saturRectangle.toFloat(), 8.0f, 2.0f);
+    g.drawFittedText("Saturation", saturRectangle.reduced(4), juce::Justification::topLeft, 1);
+    */
 
     g.drawRoundedRectangle(outputRectangle.toFloat(), 8.0f, 2.0f);
     g.drawFittedText("Output", outputRectangle.reduced(4), juce::Justification::topLeft, 1);
@@ -164,9 +219,19 @@ void SimpleDelayTapeAudioProcessorEditor::resized()
         mainFlex.alignItems = juce::FlexBox::AlignItems::stretch;
 
         // Rectángulos donde se dibujan bordes
+        preAmpRectangle = bounds.removeFromLeft(bounds.getWidth() / 8).reduced(5);
         delayRectangle = bounds.removeFromLeft(bounds.getWidth() / 2).reduced(5);
         wowRectangle = bounds.removeFromLeft(bounds.getWidth() / 2).reduced(5);
         outputRectangle = bounds.reduced(5);
+
+        // === FLEXBOX PREAMP GROUP ===
+        juce::FlexBox flexBoxPreAmp;
+        flexBoxPreAmp.flexDirection = juce::FlexBox::Direction::row;
+        flexBoxPreAmp.justifyContent = juce::FlexBox::JustifyContent::spaceAround;
+        flexBoxPreAmp.items.add(juce::FlexItem(preAmpSlider).withWidth(50).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
+        flexBoxPreAmp.alignContent = juce::FlexBox::AlignContent::center;
+        flexBoxPreAmp.alignItems = juce::FlexBox::AlignItems::center;
+        flexBoxPreAmp.performLayout(preAmpRectangle);
 
         // === FLEXBOX DELAY GROUP ===
         juce::FlexBox flexBoxDelay;
@@ -175,6 +240,8 @@ void SimpleDelayTapeAudioProcessorEditor::resized()
         flexBoxDelay.items.add(juce::FlexItem(delaySliderI).withWidth(100).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
         flexBoxDelay.items.add(juce::FlexItem(delaySliderD).withWidth(100).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
         flexBoxDelay.items.add(juce::FlexItem(feedbackSlider).withWidth(100).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
+        flexBoxDelay.items.add(juce::FlexItem(tapeWearSlider).withWidth(100).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
+        flexBoxDelay.items.add(juce::FlexItem(tapeMemorySlider).withWidth(100).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
         flexBoxDelay.items.add(juce::FlexItem(dryWetSlider).withWidth(100).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
         flexBoxDelay.alignContent = juce::FlexBox::AlignContent::center;
         flexBoxDelay.alignItems = juce::FlexBox::AlignItems::center;
@@ -189,6 +256,18 @@ void SimpleDelayTapeAudioProcessorEditor::resized()
         flexBoxWow.alignContent = juce::FlexBox::AlignContent::center;
         flexBoxWow.alignItems = juce::FlexBox::AlignItems::center;
         flexBoxWow.performLayout(wowRectangle);
+
+        /*
+        // === FLEXBOX SATURATION GROUP ===
+        juce::FlexBox flexBoxSatur;
+        flexBoxSatur.flexDirection = juce::FlexBox::Direction::row;
+        flexBoxSatur.justifyContent = juce::FlexBox::JustifyContent::spaceAround;
+        flexBoxSatur.items.add(juce::FlexItem(preGainSlider).withWidth(80).withHeight(80).withMinWidth(80).withMinHeight(60).withMaxHeight(100));
+        flexBoxSatur.items.add(juce::FlexItem(filterSaturSlider).withWidth(80).withHeight(80).withMinWidth(80).withMinHeight(60).withMaxHeight(100));
+        flexBoxSatur.alignContent = juce::FlexBox::AlignContent::center;
+        flexBoxSatur.alignItems = juce::FlexBox::AlignItems::center;
+        flexBoxSatur.performLayout(saturRectangle);
+        */
 
         // === FLEXBOX OUTPUT GROUP ===
         juce::FlexBox flexBoxOutput;

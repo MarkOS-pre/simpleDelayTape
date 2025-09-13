@@ -1,0 +1,10 @@
+* PRE AMPLIFICADOR de soft clipper, saturacion tipo cassette
+
+    - Julius O. Smith III – "Introduction to Digital Filters with Audio Applications" (Capítulo de Waveshaping)
+		y = tanh(x) se comporta linealmente para |x| pequeño (tanh(x) ≈ x) y se “aplasta” para |x| grande (tanh(x) → ±1).
+		Esto imita la compresión suave de una válvula o un circuito analógico saturando.
+
+
+*  Tape-based echo simulation
+
+     - dafx de julius o. smith
