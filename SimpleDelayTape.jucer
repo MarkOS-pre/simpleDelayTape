@@ -4,6 +4,84 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
   <MAINGROUP id="Vzx01R" name="SimpleDelayTape">
     <GROUP id="{C90375EF-E6BB-3FA8-888B-212E45CB14DE}" name="Source">
+      <FILE id="gIcp9o" name="TapeMagProcessor.cpp" compile="1" resource="0"
+            file="Source/TapeMagProcessor.cpp"/>
+      <FILE id="uUmtl9" name="TapeMagProcessor.h" compile="0" resource="0"
+            file="Source/TapeMagProcessor.h"/>
+      <GROUP id="{FA0F1A1E-1BD0-7F2C-251E-7E441ABCD725}" name="dependencies">
+        <GROUP id="{E4725C85-805B-E435-6D1B-64F90661A953}" name="chowdsp_wdf">
+          <GROUP id="{CB1AD4A4-989A-FF11-A0D4-B5A17E85DC2A}" name="math">
+            <FILE id="PHc6JD" name="omega.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/math/omega.h"/>
+            <FILE id="lHLGeP" name="sample_type.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/math/sample_type.h"/>
+            <FILE id="racxsy" name="signum.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/math/signum.h"/>
+          </GROUP>
+          <GROUP id="{02A6D9AE-6905-34B0-32C2-30ACC51A9EA1}" name="rtype">
+            <FILE id="p6vB3Y" name="root_rtype_adaptor.h" compile="0" resource="0"
+                  file="Source/dependencies/chowdsp_wdf/rtype/root_rtype_adaptor.h"/>
+            <FILE id="jK1DSI" name="rtype.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/rtype/rtype.h"/>
+            <FILE id="a5Acgj" name="rtype_adaptor.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/rtype/rtype_adaptor.h"/>
+            <FILE id="nOqyHq" name="rtype_detail.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/rtype/rtype_detail.h"/>
+            <FILE id="RLikLx" name="wdf_rtype.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/rtype/wdf_rtype.h"/>
+          </GROUP>
+          <GROUP id="{6055A817-67F0-BD13-D573-E4AF67157BB0}" name="util">
+            <FILE id="TKd9kp" name="defer_impedance.h" compile="0" resource="0"
+                  file="Source/dependencies/chowdsp_wdf/util/defer_impedance.h"/>
+          </GROUP>
+          <GROUP id="{B6240A76-B248-C2CC-9B64-CDFB3D446054}" name="wdf">
+            <FILE id="K3v44C" name="wdf.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdf/wdf.h"/>
+            <FILE id="I0p2T9" name="wdf_adaptors.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdf/wdf_adaptors.h"/>
+            <FILE id="XCXunt" name="wdf_base.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdf/wdf_base.h"/>
+            <FILE id="wD2ZGR" name="wdf_nonlinearities.h" compile="0" resource="0"
+                  file="Source/dependencies/chowdsp_wdf/wdf/wdf_nonlinearities.h"/>
+            <FILE id="vsIstg" name="wdf_one_ports.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdf/wdf_one_ports.h"/>
+            <FILE id="UzJsvt" name="wdf_sources.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdf/wdf_sources.h"/>
+          </GROUP>
+          <GROUP id="{B5872330-AD15-3177-41EB-32BAB73F7ADD}" name="wdft">
+            <FILE id="m0Nw2j" name="wdft.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdft/wdft.h"/>
+            <FILE id="X4dgRU" name="wdft_adaptors.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdft/wdft_adaptors.h"/>
+            <FILE id="Bpcn04" name="wdft_base.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdft/wdft_base.h"/>
+            <FILE id="qxseBN" name="wdft_nonlinearities.h" compile="0" resource="0"
+                  file="Source/dependencies/chowdsp_wdf/wdft/wdft_nonlinearities.h"/>
+            <FILE id="OKZ4yr" name="wdft_one_ports.h" compile="0" resource="0"
+                  file="Source/dependencies/chowdsp_wdf/wdft/wdft_one_ports.h"/>
+            <FILE id="oE71kW" name="wdft_sources.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/wdft/wdft_sources.h"/>
+          </GROUP>
+          <FILE id="dEYB2t" name="chowdsp_wdf.h" compile="0" resource="0" file="Source/dependencies/chowdsp_wdf/chowdsp_wdf.h"/>
+        </GROUP>
+        <GROUP id="{2BFAE9E9-CD7C-9435-C9A8-A580A7A31032}" name="FFTConvolver">
+          <FILE id="GBv3NF" name="AudioFFT.cpp" compile="1" resource="0" file="Source/dependencies/FFTConvolver/AudioFFT.cpp"/>
+          <FILE id="wpSwEv" name="AudioFFT.h" compile="0" resource="0" file="Source/dependencies/FFTConvolver/AudioFFT.h"/>
+          <FILE id="tD3xAR" name="FFTConvolver.cpp" compile="1" resource="0"
+                file="Source/dependencies/FFTConvolver/FFTConvolver.cpp"/>
+          <FILE id="GKIXG8" name="FFTConvolver.h" compile="0" resource="0" file="Source/dependencies/FFTConvolver/FFTConvolver.h"/>
+          <FILE id="tYFKFi" name="TwoStageFFTConvolver.cpp" compile="1" resource="0"
+                file="Source/dependencies/FFTConvolver/TwoStageFFTConvolver.cpp"/>
+          <FILE id="NDgMpq" name="TwoStageFFTConvolver.h" compile="0" resource="0"
+                file="Source/dependencies/FFTConvolver/TwoStageFFTConvolver.h"/>
+          <FILE id="m8gl0F" name="Utilities.cpp" compile="1" resource="0" file="Source/dependencies/FFTConvolver/Utilities.cpp"/>
+          <FILE id="ISwsky" name="Utilities.h" compile="0" resource="0" file="Source/dependencies/FFTConvolver/Utilities.h"/>
+        </GROUP>
+        <FILE id="kyWpqe" name="AllPassFilter.h" compile="0" resource="0" file="Source/dependencies/AllPassFilter.h"/>
+        <FILE id="odRJuF" name="Biquad.cpp" compile="1" resource="0" file="Source/dependencies/Biquad.cpp"/>
+        <FILE id="K0MXzv" name="Biquad.h" compile="0" resource="0" file="Source/dependencies/Biquad.h"/>
+        <FILE id="XNWDiF" name="BiquadCascade.h" compile="0" resource="0" file="Source/dependencies/BiquadCascade.h"/>
+        <FILE id="BDnLyK" name="CircularBuffer.cpp" compile="1" resource="0"
+              file="Source/dependencies/CircularBuffer.cpp"/>
+        <FILE id="HuxOZj" name="CircularBuffer.h" compile="0" resource="0"
+              file="Source/dependencies/CircularBuffer.h"/>
+        <FILE id="Q0038i" name="FirFilter.h" compile="0" resource="0" file="Source/dependencies/FirFilter.h"/>
+        <FILE id="QUcq85" name="OnePole.h" compile="0" resource="0" file="Source/dependencies/OnePole.h"/>
+        <FILE id="zEnkme" name="re2ir.h" compile="0" resource="0" file="Source/dependencies/re2ir.h"/>
+        <FILE id="H6t3f1" name="Reverb.h" compile="0" resource="0" file="Source/dependencies/Reverb.h"/>
+        <FILE id="DTYvyD" name="tapemag.h" compile="0" resource="0" file="Source/dependencies/tapemag.h"/>
+        <FILE id="B6szb8" name="vatonestack.h" compile="0" resource="0" file="Source/dependencies/vatonestack.h"/>
+        <FILE id="M25hZ4" name="WaveguideSpringReverb.cpp" compile="1" resource="0"
+              file="Source/dependencies/WaveguideSpringReverb.cpp"/>
+        <FILE id="NHAVL6" name="WaveguideSpringReverb.h" compile="0" resource="0"
+              file="Source/dependencies/WaveguideSpringReverb.h"/>
+        <FILE id="HCV0wq" name="wdftonestack.h" compile="0" resource="0" file="Source/dependencies/wdftonestack.h"/>
+        <FILE id="Mp6CA2" name="wowflutter.h" compile="0" resource="0" file="Source/dependencies/wowflutter.h"/>
+      </GROUP>
       <FILE id="SeFii2" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="QXP7OA" name="PluginProcessor.h" compile="0" resource="0"

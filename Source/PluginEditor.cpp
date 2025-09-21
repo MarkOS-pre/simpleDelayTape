@@ -15,7 +15,7 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize(1200, 200);
+    setSize(1500, 200);
 
     preAmpLabel = new juce::Label("", "Pre Amp");
     preAmpSlider.setSliderStyle(juce::Slider::Rotary);
@@ -78,11 +78,19 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
 
     wowDepthLabel = new juce::Label("", "WowDepth");
     wowSlider.setSliderStyle(juce::Slider::Rotary);
-    wowSlider.setRange(0.0f, 10.0f, 0.0f);
+    wowSlider.setRange(0.0f, 10.0f, 0.1f);
     wowSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
     wowDepthLabel->setJustificationType(juce::Justification::centred);
     wowDepthLabel->attachToComponent(&wowSlider, false);
     addAndMakeVisible(wowSlider);
+
+    flutterDepthLabel = new juce::Label("", "FlutterDepth");
+    flutterDepthSlider.setSliderStyle(juce::Slider::Rotary);
+    flutterDepthSlider.setRange(0.0f, 5.0f, 0.1f);
+    flutterDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    flutterDepthLabel->setJustificationType(juce::Justification::centred);
+    flutterDepthLabel->attachToComponent(&flutterDepthSlider, false);
+    addAndMakeVisible(flutterDepthSlider);
 
     wowSpeedLabel = new juce::Label("", "WowSpeed");
     wowSpeed.setSliderStyle(juce::Slider::Rotary);
@@ -90,7 +98,15 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
     wowSpeed.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
     wowSpeedLabel->setJustificationType(juce::Justification::centred);
     wowSpeedLabel->attachToComponent(&wowSpeed, false);
-    addAndMakeVisible(wowSpeed);
+    //addAndMakeVisible(wowSpeed);
+
+    noiseTapeLabel = new juce::Label("", "NoiseTape");
+    noiseTapeSlider.setSliderStyle(juce::Slider::Rotary);
+    noiseTapeSlider.setRange(-60.0f, -30.0f, -50.0f);
+    noiseTapeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 40, 20);
+    noiseTapeLabel->setJustificationType(juce::Justification::centred);
+    noiseTapeLabel->attachToComponent(&noiseTapeSlider, false);
+    addAndMakeVisible(noiseTapeSlider);
 
     /*
     preGainLabel = new juce::Label("", "Gain");
@@ -142,8 +158,10 @@ SimpleDelayTapeAudioProcessorEditor::SimpleDelayTapeAudioProcessorEditor (Simple
     tapeWearKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "tapeMemory", tapeMemorySlider);
     dryWetKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "dryWet", dryWetSlider);
     wowKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "wow", wowSlider);
+    flutterKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "flutterDepth", flutterDepthSlider);
     speedKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "wowSpeed", wowSpeed);
     preGainKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "preGain", preGainSlider);
+    noiseTapeKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "noiseTapeGain", noiseTapeSlider);
     filterSaturKnob = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.tree, "filterSatur", filterSaturSlider);
     syncAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.tree, "syncOn", syncButton);
@@ -174,6 +192,9 @@ void SimpleDelayTapeAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.drawRoundedRectangle(wowRectangle.toFloat(), 8.0f, 2.0f);
     g.drawFittedText("Wow", wowRectangle.reduced(4), juce::Justification::topLeft, 1);
+
+    g.drawRoundedRectangle(noiseTapeRectangle.toFloat(), 8.0f, 2.0f);
+    g.drawFittedText("Noise", noiseTapeRectangle.reduced(4), juce::Justification::topLeft, 1);
 
     /*
     g.drawRoundedRectangle(saturRectangle.toFloat(), 8.0f, 2.0f);
@@ -222,6 +243,7 @@ void SimpleDelayTapeAudioProcessorEditor::resized()
         preAmpRectangle = bounds.removeFromLeft(bounds.getWidth() / 8).reduced(5);
         delayRectangle = bounds.removeFromLeft(bounds.getWidth() / 2).reduced(5);
         wowRectangle = bounds.removeFromLeft(bounds.getWidth() / 2).reduced(5);
+        noiseTapeRectangle = bounds.removeFromLeft(bounds.getWidth() / 2).reduced(5);
         outputRectangle = bounds.reduced(5);
 
         // === FLEXBOX PREAMP GROUP ===
@@ -252,10 +274,19 @@ void SimpleDelayTapeAudioProcessorEditor::resized()
         flexBoxWow.flexDirection = juce::FlexBox::Direction::row;
         flexBoxWow.justifyContent = juce::FlexBox::JustifyContent::spaceAround;
         flexBoxWow.items.add(juce::FlexItem(wowSlider).withWidth(80).withHeight(80).withMinWidth(80).withMinHeight(60).withMaxHeight(100));
-        flexBoxWow.items.add(juce::FlexItem(wowSpeed).withWidth(80).withHeight(80).withMinWidth(80).withMinHeight(60).withMaxHeight(100));
+        flexBoxWow.items.add(juce::FlexItem(flutterDepthSlider).withWidth(80).withHeight(80).withMinWidth(80).withMinHeight(60).withMaxHeight(100));
         flexBoxWow.alignContent = juce::FlexBox::AlignContent::center;
         flexBoxWow.alignItems = juce::FlexBox::AlignItems::center;
         flexBoxWow.performLayout(wowRectangle);
+
+        // === FLEXBOX NOISE GROUP ===
+        juce::FlexBox flexBoxNoise;
+        flexBoxNoise.flexDirection = juce::FlexBox::Direction::row;
+        flexBoxNoise.justifyContent = juce::FlexBox::JustifyContent::spaceAround;
+        flexBoxNoise.items.add(juce::FlexItem(noiseTapeSlider).withWidth(50).withHeight(80).withMinWidth(80).withMinHeight(80).withMaxHeight(100));
+        flexBoxNoise.alignContent = juce::FlexBox::AlignContent::center;
+        flexBoxNoise.alignItems = juce::FlexBox::AlignItems::center;
+        flexBoxNoise.performLayout(noiseTapeRectangle);
 
         /*
         // === FLEXBOX SATURATION GROUP ===

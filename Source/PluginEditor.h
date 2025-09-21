@@ -38,6 +38,8 @@ private:
     juce::Slider dryWetSlider;
     juce::Slider wowSlider;
     juce::Slider wowSpeed;
+    juce::Slider flutterDepthSlider;
+    juce::Slider noiseTapeSlider;
 
     juce::Label* delayILabel;
     juce::Label* delayDLabel;
@@ -47,6 +49,8 @@ private:
     juce::Label* dryWetLabel;
     juce::Label* wowDepthLabel;
     juce::Label* wowSpeedLabel;
+    juce::Label* flutterDepthLabel;
+    juce::Label* noiseTapeLabel;
 
 
     juce::ToggleButton syncButton{ "Sync to BPM" }, pingPongButton{ "Ping Pong" };
@@ -57,6 +61,7 @@ private:
     juce::Rectangle<int> wowRectangle;
     juce::Rectangle<int> outputRectangle;
     juce::Rectangle<int> preAmpRectangle;
+    juce::Rectangle<int> noiseTapeRectangle;
 
     juce::Slider preAmpSlider;
     juce::Slider preGainSlider;
@@ -73,9 +78,11 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> tapeMemoryKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> dryWetKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> wowKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> flutterKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> speedKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> preGainKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterSaturKnob;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> noiseTapeKnob;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> syncAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> pingPongAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> divisionAttachmentI;

@@ -35,6 +35,8 @@
 #define WOW_NAME "Wow"
 #define WOW_SPEED_ID "wowSpeed"
 #define WOW_SPEED_NAME "WowSpeed"
+#define FLUTTER_DEPTH_ID "flutterDepth"
+#define FLUTTER_DEPTH_NAME "FlutterDepth"
 #define PRE_GAIN_ID "preGain"
 #define PRE_GAIN_NAME "PreGain"
 #define FILTER_SATUR_ID "filterSatur"
@@ -45,6 +47,8 @@
 #define TAPEWEAR_NAME "TapeWear"
 #define TAPEMEMORY_ID "tapeMemory"
 #define TAPEMEMORY_NAME "TapeMemory"
+#define NOISETAPE_ID "noiseTapeGain"
+#define NOISETAPE_NAME "NoiseTapeGain"
 
 
 //==============================================================================
@@ -65,9 +69,11 @@ SimpleDelayTapeAudioProcessor::SimpleDelayTapeAudioProcessor()
                                  std::make_unique<juce::AudioParameterFloat>(TAPEMEMORY_ID, TAPEMEMORY_NAME, 0.1f, 0.95f, 0.1f),
                                  std::make_unique<juce::AudioParameterFloat>(LEVEL_ID, LEVEL_NAME, 0.0f, 1.0f, 0.8f),
                                  std::make_unique<juce::AudioParameterFloat>(DRYWET_ID, DRYWET_NAME, 0.0f, 1.0f, 0.5f),
-                                std::make_unique<juce::AudioParameterFloat>(WOW_ID, WOW_NAME, 0.0f, 10.0f, 0.0f),
+                                std::make_unique<juce::AudioParameterFloat>(WOW_ID, WOW_NAME, 0.0f, 10.0f, 0.1f),
                                 std::make_unique<juce::AudioParameterFloat>(WOW_SPEED_ID, WOW_SPEED_NAME, 0.1f, 4.0f, 1.5f),
+                                std::make_unique<juce::AudioParameterFloat>(FLUTTER_DEPTH_ID, FLUTTER_DEPTH_NAME, 0.0f, 5.0f, 0.1f),
                                 std::make_unique<juce::AudioParameterFloat>(PRE_GAIN_ID, PRE_GAIN_NAME, 1.0f, 50.0f, 1.0f),
+                                std::make_unique<juce::AudioParameterFloat>(NOISETAPE_ID, NOISETAPE_NAME, -60.0f, -30.0f, -50.0f),
                                 std::make_unique<juce::AudioParameterFloat>(FILTER_SATUR_ID, FILTER_SATUR_NAME, 1500.0f, 10000.0f, 1500.0f),
                                 std::make_unique<juce::AudioParameterBool>(SYNC_ID, SYNC_NAME, false),
                                 std::make_unique<juce::AudioParameterBool>(PING_PONG_ID, PING_PONG_NAME, false),
@@ -170,7 +176,12 @@ void SimpleDelayTapeAudioProcessor::prepareToPlay(double sampleRate, int samples
 
         auto coeffs = juce::dsp::IIR::Coefficients<float>::makeLowPass(localSampleRate, 5000.0f);
         *lowPassFilters[i].coefficients = *coeffs;
+
+        
     }
+
+    auto coeffsHigh = juce::dsp::IIR::Coefficients<float>::makeHighPass(localSampleRate, 3000.0f);
+    *highPassFilterNoise.coefficients = *coeffsHigh;
 
     dryWetMixer.setMixingRule(juce::dsp::DryWetMixingRule::sin3dB); // o sinCos para más natural
     dryWetMixer.setWetLatency(0); // importante si el delay genera latencia (este no lo hace)
@@ -182,6 +193,12 @@ void SimpleDelayTapeAudioProcessor::prepareToPlay(double sampleRate, int samples
     smoothedDelayTimeL.reset(localSampleRate, 0.05);
     smoothedDelayTimeR.reset(localSampleRate, 0.05);
     smoothedWear.reset(localSampleRate, 0.1);
+    SmoothFlutterDepth.reset(localSampleRate, 0.05);
+    smoothWowDepth.reset(localSampleRate, 0.05);
+    TapeMag.reset(new TapeMagProcessor());
+
+    // Reset DSP objects
+    TapeMag->Reset(sampleRate, getTotalNumOutputChannels(), OSamount);
 
     //SATURATION
     /*
@@ -419,10 +436,19 @@ void SimpleDelayTapeAudioProcessor::processStereoDelay(juce::AudioBuffer<float>&
             // compensación simple de volumen según wear
             float compensation = 1.0f / juce::jmax(0.3f, wear * 1.2f);
             fbIn *= compensation;
+            
+            //hiss o ruido de cinta
 
+            float noiseTape  = ((float)rand() / RAND_MAX) * 2.0f - 1.0f; // rango [-1, 1]
+
+            noiseTapeGain = juce::Decibels::decibelsToGain(noiseTapeDecibels);
+
+            noiseTape *= noiseTapeGain;
+
+            noiseTape = highPassFilterNoise.processSample(noiseTape);
             
             // escribir en delay buffer: entrada + feedback * salida
-            delayData[writePosition[channel]] = in + fbIn;
+            delayData[writePosition[channel]] = in + fbIn + noiseTape;
 
             // avanzar write pointer
             if (++writePosition[channel] >= delayBufferLength)
@@ -553,34 +579,57 @@ float SimpleDelayTapeAudioProcessor::applyWowFlutter(float baseDealySamples, dou
 {
      constexpr float twoPi = juce::MathConstants<float>::twoPi;
      wowDepth = (smoothWowDepth.getNextValue() * sampleRate) / 1000.0f;
+     flutterDepth = (SmoothFlutterDepth.getNextValue() * sampleRate) / 1000.0f;
      float wowMod;
+     float flutterMod;
 
     //En muestras
 
     float wowStep = twoPi * wowRate / (float)sampleRate;
-    
+    float flutterStep = twoPi * flutterRate / (float)sampleRate;
 
     //LFOs
     if (channel == 0) 
     {
          wowMod = std::sin(wowPhase1) * wowDepth;
         wowPhase1 += wowStep;
+
+        flutterMod = std::sin(flutterPhase1) * flutterDepth;
+        flutterPhase1 += flutterStep;
     }
     else {
          wowMod = std::sin(wowPhase2) * wowDepth;
         wowPhase2 += wowStep;
+
+        flutterMod = std::sin(flutterPhase2) * flutterDepth;
+        flutterPhase2 += flutterStep;
     }
     
 
-    //Avance de fase
+    //ruido blanco suavizado para irregularidad
 
+    float rnd = (float)rand() / (float)RAND_MAX - 0.5f;
+
+    //filtro paso bajo primer orden para suvizar ruido
+
+    /*
+    * 𝛼=0.98 α=0.98 → filtro muy lento, retiene mucho la historia.
+        El resultado es ruido correlado de baja frecuencia (a veces se llama “brown noise” o “random walk” en DSP simplificado).
+    * El wow & flutter real no es un seno perfecto: los motores y guías de cinta generan fluctuaciones aleatorias.
+    */
+
+    flutterNoise = 0.98f * flutterNoise + 0.02f * rnd;
+
+
+    float modulation = wowMod + flutterMod + flutterNoise * 0.5f;
 
     //Limitar
     if (wowPhase1 > twoPi)  wowPhase1 -= twoPi;
     if (wowPhase2 > twoPi)  wowPhase2 -= twoPi;
-    if (flutterPhase > twoPi) flutterPhase -= twoPi;
+    if (flutterPhase1 > twoPi) flutterPhase1 -= twoPi;
+    if (flutterPhase2 > twoPi) flutterPhase2 -= twoPi;
 
-    return baseDealySamples + wowMod;
+    return baseDealySamples + modulation;
 }
 void SimpleDelayTapeAudioProcessor::saturation(juce::AudioBuffer<float>& buffer)
 {
@@ -627,6 +676,7 @@ float SimpleDelayTapeAudioProcessor::udoDistortion(float input)
     return output;
 }
 
+
 void SimpleDelayTapeAudioProcessor::preAmp(juce::AudioBuffer<float>& buffer)
 {
     
@@ -668,6 +718,8 @@ void SimpleDelayTapeAudioProcessor::preAmp(juce::AudioBuffer<float>& buffer)
      preampGainDb = *tree.getRawParameterValue(PREAMP_ID);
      wowDepthMs = *tree.getRawParameterValue(WOW_ID);
      wowRate = *tree.getRawParameterValue(WOW_SPEED_ID);
+     flutterDepthMs = *tree.getRawParameterValue(FLUTTER_DEPTH_ID);
+     noiseTapeDecibels = *tree.getRawParameterValue(NOISETAPE_ID);
      
 
      smoothedDelayTimeL.setTargetValue(delayTimeMsI);
@@ -676,6 +728,37 @@ void SimpleDelayTapeAudioProcessor::preAmp(juce::AudioBuffer<float>& buffer)
      smoothedWear.setTargetValue(wear);
      smoothedPreamp.setTargetValue(preampGainDb);
      smoothWowDepth.setTargetValue(wowDepthMs);
+     SmoothFlutterDepth.setTargetValue(flutterDepthMs);
+ }
+ void SimpleDelayTapeAudioProcessor::setProcessingBuffer(juce::AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels)
+ {
+     // Get write pointer to channels
+     auto bufferpointer = buffer.getArrayOfWritePointers();
+
+
+     // Initialise processing buffer, applying buffer to vectorvectorfloat array allows easier duplication if parallel processing is required
+     std::vector<std::vector<float>> processingbuffer;
+
+     // Resize processing buffer
+     processingbuffer.resize(totalNumOutputChannels);
+     for (int i = 0; i < totalNumOutputChannels; ++i)
+     {
+         processingbuffer[i].resize(buffer.getNumSamples());
+
+     }
+
+     // Apply audio to processing buffer
+     for (int channel = 0; channel < totalNumOutputChannels; channel++)
+     {
+         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
+         {
+             // if mono stereo apply only input channel to both output channels
+             if (totalNumInputChannels == 1)
+                 processingbuffer[channel][sample] = bufferpointer[0][sample];
+             else
+                 processingbuffer[channel][sample] = bufferpointer[channel][sample];
+         }
+     }
  }
 void SimpleDelayTapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
@@ -687,12 +770,17 @@ void SimpleDelayTapeAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     //ETAPA PREAMPLIFICADOR
     preAmp(buffer);
 
+    //ETAPA DE MAGNETIZACION
+    setProcessingBuffer(buffer, getNumInputChannels(), getNumOutputChannels());
+    TapeMag->ProcessBuffer(processingbuffer, BlockSize);
+
     if (pingPongMode && buffer.getNumChannels() >= 2)
     {
         processPingPongDelay(buffer, delayTimeMsI);
         return; // salta el delay normal
     }
     else {
+        
         processStereoDelay(buffer, numSamples, numChannels, delayTimeMsI, delayTimeMsD);
     }
      

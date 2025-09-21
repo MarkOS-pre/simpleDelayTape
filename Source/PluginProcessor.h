@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "TapeHysteresis.h"
+#include "TapeMagProcessor.h"
 
 //==============================================================================
 /**
@@ -71,6 +72,7 @@ public:
     void saturation(juce::AudioBuffer<float>& buffer);
     float udoDistortion(float input);
     void updateParameters();
+    void setProcessingBuffer(juce::AudioBuffer<float>& buffer, int totalNumInputChannels, int totalNumOutputChannels);
 
     juce::AudioProcessorValueTreeState tree;
 private:
@@ -93,15 +95,19 @@ private:
     // Wow/Flutter
     float wowPhase1 = 0.0f ;
     float wowPhase2 = 0.0f;
-    float flutterPhase = 0.0f;
+    float flutterPhase1 = 0.0f;
+    float flutterPhase2 = 0.0f;
 
     // Parámetros configurables
-    float wowDepthMs;
-    float wowRate{ 1.5f };   // Hz
-    float wowDepth{ 0.0f };   // Muestras
+    float wowDepthMs{ 5.0f };
+    float wowRate{ 0.4f };   // Hz
+    float wowDepth{ 5.0f };   // Muestras
 
-    float flutterRate = 6.0f;  // Hz
-    float flutterDepth = 3.0f;  // Muestras
+    float flutterDepthMs{ 1.5f };
+    float flutterRate = 10.0f;  // Hz
+    float flutterDepth = 1.5f;  // Muestras
+
+    float flutterNoise{ 0.0f }; //rudio filtrado
 
     //juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLineI;
     //juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLineD;
@@ -114,11 +120,19 @@ private:
     juce::dsp::DryWetMixer<float> dryWetMixer;
     juce::SmoothedValue<float> smoothedMix;
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedPreamp, smoothedFeedback, smoothedWear;
-    juce::SmoothedValue<float> smoothedDelayTimeL, smoothedDelayTimeR, smoothedDelayTimePingPong, smoothWowDepth;
+    juce::SmoothedValue<float> smoothedDelayTimeL, smoothedDelayTimeR, smoothedDelayTimePingPong, smoothWowDepth, SmoothFlutterDepth;
     juce::AudioPlayHead::PositionInfo info;
     juce::dsp::IIR::Filter<float> lowPassFilters[2];
+    juce::dsp::IIR::Filter<float> highPassFilterNoise;
     float currentDelaySamples[2] = { 0.0f, 0.0f };    //para el cambio estilo tape del delaysamples
-    
+
+
+    //TAPE MAG
+
+    int OSamount = 2;
+    int BlockSize = 512;
+    std::unique_ptr<TapeMagProcessor> TapeMag = std::make_unique<TapeMagProcessor>();
+    std::vector<std::vector<float>> processingbuffer;
 
     //SATURATION
    
@@ -132,6 +146,11 @@ private:
 
     juce::dsp::ProcessorDuplicator<juce::dsp::FIR::Filter<float>, juce::dsp::FIR::Coefficients<float>> antiAliasingFilter;
     juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>> filterProcessor;
+
+    //NOISE TAPE HISS
+
+    float noiseTapeGain;
+    float noiseTapeDecibels;
 
 
     //==============================================================================
